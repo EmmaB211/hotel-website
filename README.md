@@ -97,26 +97,21 @@ This creates:
 - 5 room types, 8 facilities, 10 menu items, 15 gallery images, 6 tourism attractions, 4 testimonials,
   3 special offers, 2 conference halls
 
-## 7. Deploy with GitHub Actions and Railway
+## 7. Deploy with Railway
 
-1. Create a Railway project with a PostgreSQL database and a Node.js service.
-2. Generate a public domain for the app service in its **Settings → Networking** page.
-3. In the app service, set `DATABASE_URL` to a reference to the PostgreSQL service's `DATABASE_URL`.
-   Also set a strong `JWT_SECRET`, a unique `ADMIN_INITIAL_PASSWORD`, and `NEXT_PUBLIC_SITE_URL` to
-   the generated domain. Add the optional `SMTP_*`, `CLOUDINARY_*`, and Google Maps variables if you
-   use those integrations.
-4. In GitHub repository **Settings → Secrets and variables → Actions**, add these repository secrets:
-   `RAILWAY_TOKEN` (a project token), `RAILWAY_PROJECT_ID`, `RAILWAY_ENVIRONMENT_ID`, and
-   `RAILWAY_SERVICE_ID`.
-5. Add repository variables `RAILWAY_DEPLOY_ENABLED=true` and `NEXT_PUBLIC_SITE_URL` set to the same
-   generated domain.
-6. In **Actions**, run **Deploy to Railway** manually once. Later pushes to `main` will build and
-   deploy automatically.
+Connect the GitHub repository to a Railway app service and add a PostgreSQL service to the same
+Railway project. Set the app service's `DATABASE_URL` reference to `${{Postgres.DATABASE_URL}}`,
+and configure `JWT_SECRET` and `NEXT_PUBLIC_SITE_URL`. Railway reads `railway.json` to run
+`prisma migrate deploy` before each deployment. Its GitHub integration deploys pushes to `main`;
+the GitHub Actions workflow separately runs lint and a production build.
 
-The Railway pre-deploy step applies Prisma migrations and seeds the database with demo content.
-After the first successful deployment, remove `ADMIN_INITIAL_PASSWORD` from the Railway service
-variables; the seed process only needs it when creating the initial admin account. The seed is
-idempotent for existing records, but deleted demo records can be recreated on subsequent deploys.
+Generate a public Railway domain from the app service's **Settings → Networking** page and use it
+for `NEXT_PUBLIC_SITE_URL`. For the first admin account only, set `ADMIN_INITIAL_PASSWORD` to a
+strong unique password on the app service, run `npm run db:seed` once with the app service's
+environment, then remove `ADMIN_INITIAL_PASSWORD`. The seed creates demo content and does not
+reset the password of an existing admin. Do not run the seed on every deployment.
+
+Add the optional `SMTP_*`, `CLOUDINARY_*`, and Google Maps variables if you use those integrations.
 Replace the documented sample hotel content with verified production information before accepting
 real bookings.
 

@@ -1,4 +1,4 @@
-name: Deploy to Railway
+name: Validate
 
 on:
   push:
@@ -7,14 +7,14 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: railway-production
+  group: validate-main
   cancel-in-progress: false
 
 permissions:
   contents: read
 
 jobs:
-  deploy:
+  validate:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
@@ -35,33 +35,8 @@ jobs:
       - name: Lint
         run: npm run lint
 
-      - name: Check public site URL
-        run: test -n "$NEXT_PUBLIC_SITE_URL"
-        env:
-          NEXT_PUBLIC_SITE_URL: ${{ vars.NEXT_PUBLIC_SITE_URL }}
-
       - name: Build
         run: npm run build
         env:
           JWT_SECRET: ci-build-only-not-used-at-runtime
-          NEXT_PUBLIC_SITE_URL: ${{ vars.NEXT_PUBLIC_SITE_URL }}
-
-      - name: Install Railway CLI
-        if: vars.RAILWAY_DEPLOY_ENABLED == 'true'
-        run: npm install --global @railway/cli
-
-      - name: Link Railway project
-        if: vars.RAILWAY_DEPLOY_ENABLED == 'true'
-        run: railway link --project "$RAILWAY_PROJECT_ID" --environment "$RAILWAY_ENVIRONMENT_ID" --service "$RAILWAY_SERVICE_ID" --json
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-          RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
-          RAILWAY_ENVIRONMENT_ID: ${{ secrets.RAILWAY_ENVIRONMENT_ID }}
-          RAILWAY_SERVICE_ID: ${{ secrets.RAILWAY_SERVICE_ID }}
-
-      - name: Deploy to Railway
-        if: vars.RAILWAY_DEPLOY_ENABLED == 'true'
-        run: railway up --ci --service "$RAILWAY_SERVICE_ID"
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-          RAILWAY_SERVICE_ID: ${{ secrets.RAILWAY_SERVICE_ID }}
+          NEXT_PUBLIC_SITE_URL: https://hotel-website-production-6ef6.up.railway.app
