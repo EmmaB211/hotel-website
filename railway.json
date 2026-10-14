@@ -1,6 +1,6 @@
 {
   "$schema": "https://railway.com/railway.schema.json",
   "deploy": {
-    "startCommand": "npx prisma migrate deploy && if [ -n \"$ADMIN_INITIAL_PASSWORD\" ]; then npm run db:seed; fi && npm start"
+    "startCommand": "npx prisma migrate deploy && npm start"
   }
 }
