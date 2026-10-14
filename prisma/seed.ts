@@ -34,17 +34,25 @@ async function main() {
   console.log("Seeding database with demo data...");
 
   // --- Admin user ---
-  const passwordHash = await bcrypt.hash("ChangeMe123!", 12);
-  await prisma.user.upsert({
+  const existingAdmin = await prisma.user.findUnique({
     where: { email: "admin@liragrandhotel.com" },
-    update: {},
-    create: {
-      name: "Hotel Administrator",
-      email: "admin@liragrandhotel.com",
-      passwordHash,
-      role: "SUPER_ADMIN",
-    },
   });
+  if (!existingAdmin) {
+    const initialAdminPassword = process.env.ADMIN_INITIAL_PASSWORD;
+    if (!initialAdminPassword) {
+      throw new Error("Set ADMIN_INITIAL_PASSWORD before creating the initial admin account.");
+    }
+
+    const passwordHash = await bcrypt.hash(initialAdminPassword, 12);
+    await prisma.user.create({
+      data: {
+        name: "Hotel Administrator",
+        email: "admin@liragrandhotel.com",
+        passwordHash,
+        role: "SUPER_ADMIN",
+      },
+    });
+  }
 
   // --- Rooms ---
   const roomsData = [
@@ -410,7 +418,7 @@ async function main() {
   console.log(`Seeded ${hallsData.length} conference halls`);
 
   console.log("Seeding complete.");
-  console.log("First admin login: admin@liragrandhotel.com / ChangeMe123! (change this immediately)");
+  console.log("Admin login email: admin@liragrandhotel.com");
 }
 
 main()

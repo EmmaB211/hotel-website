@@ -52,6 +52,7 @@ cp .env.example .env
 | --- | --- |
 | `DATABASE_URL` | PostgreSQL connection string |
 | `JWT_SECRET` | Long random string used to sign admin session tokens |
+| `ADMIN_INITIAL_PASSWORD` | Strong, unique password used when creating the initial admin account |
 | `ADMIN_SESSION_COOKIE_NAME` | Cookie name for admin sessions (default provided) |
 | `NEXT_PUBLIC_SITE_URL` | Public site URL (used for metadata & sitemap) |
 | `SMTP_*` | SMTP credentials for booking/contact email notifications (optional) |
@@ -84,16 +85,42 @@ npx prisma migrate dev --name init
 
 ## 6. Seed the Database
 
+Set `ADMIN_INITIAL_PASSWORD` to a strong, unique password in `.env` before seeding. Do not use a
+shared or default password.
+
 ```bash
 npm run db:seed
 ```
 
 This creates:
-- 1 admin user — **admin@liragrandhotel.com / ChangeMe123!** (change immediately after first login)
+- 1 admin user — `admin@liragrandhotel.com` (use the password supplied through `ADMIN_INITIAL_PASSWORD`)
 - 5 room types, 8 facilities, 10 menu items, 15 gallery images, 6 tourism attractions, 4 testimonials,
   3 special offers, 2 conference halls
 
-## 7. Run the Development Server
+## 7. Deploy with GitHub Actions and Railway
+
+1. Create a Railway project with a PostgreSQL database and a Node.js service.
+2. Generate a public domain for the app service in its **Settings → Networking** page.
+3. In the app service, set `DATABASE_URL` to a reference to the PostgreSQL service's `DATABASE_URL`.
+   Also set a strong `JWT_SECRET`, a unique `ADMIN_INITIAL_PASSWORD`, and `NEXT_PUBLIC_SITE_URL` to
+   the generated domain. Add the optional `SMTP_*`, `CLOUDINARY_*`, and Google Maps variables if you
+   use those integrations.
+4. In GitHub repository **Settings → Secrets and variables → Actions**, add these repository secrets:
+   `RAILWAY_TOKEN` (a project token), `RAILWAY_PROJECT_ID`, `RAILWAY_ENVIRONMENT_ID`, and
+   `RAILWAY_SERVICE_ID`.
+5. Add repository variables `RAILWAY_DEPLOY_ENABLED=true` and `NEXT_PUBLIC_SITE_URL` set to the same
+   generated domain.
+6. In **Actions**, run **Deploy to Railway** manually once. Later pushes to `main` will build and
+   deploy automatically.
+
+The Railway pre-deploy step applies Prisma migrations and seeds the database with demo content.
+After the first successful deployment, remove `ADMIN_INITIAL_PASSWORD` from the Railway service
+variables; the seed process only needs it when creating the initial admin account. The seed is
+idempotent for existing records, but deleted demo records can be recreated on subsequent deploys.
+Replace the documented sample hotel content with verified production information before accepting
+real bookings.
+
+## 8. Run the Development Server
 
 ```bash
 npm run dev
@@ -101,13 +128,13 @@ npm run dev
 
 Visit `http://localhost:3000`. Admin dashboard: `http://localhost:3000/admin/login`.
 
-## 8. Creating the First Admin Account
+## 9. Creating the First Admin Account
 
 The seed script creates one automatically. To create additional admins, use Prisma Studio
 (`npm run db:studio`) and insert a `User` row with a bcrypt-hashed password, or add a small script
 using `lib/auth.ts`'s `hashPassword()` helper.
 
-## 9. Configuring Integrations
+## 10. Configuring Integrations
 
 - **WhatsApp**: set `whatsapp` (digits only, no `+`) in `config/site.ts`.
 - **Google Maps**: update `coordinates`, `googleMapsUrl`, and `googleMapsEmbedSrc` in `config/site.ts`.
@@ -116,19 +143,19 @@ using `lib/auth.ts`'s `hashPassword()` helper.
 - **Cloudinary**: set `CLOUDINARY_*` env vars and wire the admin Gallery/Facilities/Rooms forms to
   Cloudinary's unsigned upload API for direct image uploads (URLs can currently be pasted manually).
 
-## 10. Branding
+## 11. Branding
 
 All hotel identity (name, tagline, logo, contact info, address, hours, currency, brand colors) lives
 in [`config/site.ts`](config/site.ts). Update this single file to rebrand the entire site.
 
-## 11. Build for Production
+## 12. Build for Production
 
 ```bash
 npm run build
 npm run start
 ```
 
-## 12. Docker Deployment (VPS)
+## 13. Docker Deployment (VPS)
 
 A minimal production Dockerfile:
 

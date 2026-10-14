@@ -11,7 +11,6 @@ import { cn } from "@/lib/utils";
 
 export function Navbar() {
   const [isScrolled, setIsScrolled] = React.useState(false);
-  const [isMobileOpen, setIsMobileOpen] = React.useState(false);
   const pathname = usePathname();
 
   React.useEffect(() => {
@@ -20,10 +19,6 @@ export function Navbar() {
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
-
-  React.useEffect(() => {
-    setIsMobileOpen(false);
-  }, [pathname]);
 
   const isHome = pathname === "/";
   const useLightText = isHome && !isScrolled;
@@ -72,18 +67,27 @@ export function Navbar() {
             Book Your Stay
           </Link>
         </div>
-
-        <button
-          aria-label="Toggle navigation menu"
-          className={cn(
-            "flex h-10 w-10 items-center justify-center rounded-full lg:hidden",
-            useLightText ? "text-white" : "text-brand-charcoal"
-          )}
-          onClick={() => setIsMobileOpen((prev) => !prev)}
-        >
-          {isMobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-        </button>
+        <MobileNavigation key={pathname} useLightText={useLightText} />
       </div>
+    </header>
+  );
+}
+
+function MobileNavigation({ useLightText }: { useLightText: boolean }) {
+  const [isMobileOpen, setIsMobileOpen] = React.useState(false);
+
+  return (
+    <>
+      <button
+        aria-label="Toggle navigation menu"
+        className={cn(
+          "flex h-10 w-10 items-center justify-center rounded-full lg:hidden",
+          useLightText ? "text-white" : "text-brand-charcoal"
+        )}
+        onClick={() => setIsMobileOpen((prev) => !prev)}
+      >
+        {isMobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+      </button>
 
       <AnimatePresence>
         {isMobileOpen && (
@@ -92,7 +96,7 @@ export function Navbar() {
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.25, ease: "easeInOut" }}
-            className="overflow-hidden bg-white shadow-lg lg:hidden"
+            className="absolute left-0 top-20 w-full overflow-hidden bg-white shadow-lg lg:hidden"
           >
             <nav className="flex flex-col gap-1 px-6 py-4">
               {navLinks.map((link) => (
@@ -114,6 +118,6 @@ export function Navbar() {
           </motion.div>
         )}
       </AnimatePresence>
-    </header>
+    </>
   );
 }
