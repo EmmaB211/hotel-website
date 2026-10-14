@@ -102,7 +102,7 @@ This creates:
 Connect the GitHub repository to a Railway app service and add a PostgreSQL service to the same
 Railway project. Set the app service's `DATABASE_URL` reference to `${{Postgres.DATABASE_URL}}`,
 and configure `JWT_SECRET` and `NEXT_PUBLIC_SITE_URL`. Railway reads `railway.json` to run
-`prisma migrate deploy` before each deployment. Its GitHub integration deploys pushes to `main`;
+`prisma migrate deploy` when the app starts, before Next.js serves requests. Its GitHub integration deploys pushes to `main`;
 the GitHub Actions workflow separately runs lint and a production build.
 
 Generate a public Railway domain from the app service's **Settings → Networking** page and use it
